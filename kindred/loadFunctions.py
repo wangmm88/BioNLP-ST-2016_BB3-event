@@ -173,40 +173,41 @@ def loadDataFromJSON(filename, ignoreEntities=[]):
     parsed = parseJSON(data, ignoreEntities)
     baseTxtFile = os.path.basename(filename)
     parsed.sourceFilename = baseTxtFile
-    return parseddef parseSimpleTag_helper(node, currentPosition=0, ignoreEntities=[]):
-        text, entities, relationTuples = '', [], []
-        for s in node.childNodes:
-            if s.nodeType == s.ELEMENT_NODE:
-                insideText, insideEntities, insideRelationTuples = parseSimpleTag_helper(
-                    s, currentPosition+len(text))
-                if s.tagName == 'relation':
-                    relationType = s.getAttribute('type')
-                    arguments = [(argName, entityID) for argName,
-                                 entityID in s.attributes.items() if argName != 'type']
-                    arguments = sorted(arguments)
-                    sourceEntityIDs = [
-                        sourceEntityID for argName, sourceEntityID in arguments]
-                    argNames = [argName for argName,
-                                sourceEntityID in arguments]
-                    relationTuple = (relationType, sourceEntityIDs, argNames)
-                    relationTuples.append(relationTuple)
-                else:  # Entity
-                    entityType = s.tagName
-                    sourceEntityID = s.getAttribute('id')
-                    position = [(currentPosition+len(text),
-                                 currentPosition+len(text)+len(insideText))]
-                    assert len(
-                        insideText) > 0, "Name (text inside tags) is empty for entity of type %s" % entityType
-                    if not entityType in ignoreEntities:
-                        e = kindred.Entity(
-                            entityType, insideText, position, sourceEntityID=sourceEntityID)
-                        entities.append(e)
-                text += insideText
-                entities += insideEntities
-                relationTuples += insideRelationTuples
-            elif s.nodeType == s.TEXT_NODE:
-                text += s.nodeValue
-        return text, entities, relationTuples
+    return parsed
+def parseSimpleTag_helper(node, currentPosition=0, ignoreEntities=[]):
+    text, entities, relationTuples = '', [], []
+    for s in node.childNodes:
+        if s.nodeType == s.ELEMENT_NODE:
+            insideText, insideEntities, insideRelationTuples = parseSimpleTag_helper(
+                s, currentPosition+len(text))
+            if s.tagName == 'relation':
+                relationType = s.getAttribute('type')
+                arguments = [(argName, entityID) for argName,
+                             entityID in s.attributes.items() if argName != 'type']
+                arguments = sorted(arguments)
+                sourceEntityIDs = [
+                    sourceEntityID for argName, sourceEntityID in arguments]
+                argNames = [argName for argName,
+                            sourceEntityID in arguments]
+                relationTuple = (relationType, sourceEntityIDs, argNames)
+                relationTuples.append(relationTuple)
+            else:  # Entity
+                entityType = s.tagName
+                sourceEntityID = s.getAttribute('id')
+                position = [(currentPosition+len(text),
+                             currentPosition+len(text)+len(insideText))]
+                assert len(
+                    insideText) > 0, "Name (text inside tags) is empty for entity of type %s" % entityType
+                if not entityType in ignoreEntities:
+                    e = kindred.Entity(
+                        entityType, insideText, position, sourceEntityID=sourceEntityID)
+                    entities.append(e)
+            text += insideText
+            entities += insideEntities
+            relationTuples += insideRelationTuples
+        elif s.nodeType == s.TEXT_NODE:
+            text += s.nodeValue
+    return text, entities, relationTuples
 def mergeEntitiesWithMatchingIDs(unmergedEntities):
     assert isinstance(unmergedEntities, list)
     entityDict = OrderedDict()
