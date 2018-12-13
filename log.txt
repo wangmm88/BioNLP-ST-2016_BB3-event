@@ -1,0 +1,86 @@
+<Document An evaluation of selective broths based on the bi-selenite ion and on
+hypertonic strontium chloride in Salmonellae detection in egg products. Of the
+104 isolations of Salmonella sp. from egg pulp, 97 were obtained from strontium
+chloride M broth, 42 from strontium selenite broth and 57 from strontium
+selenite A broth. The results suggest that the first medium may be used more
+successfully than bi-selenite based media for enrichment and subsequent
+detection of salmonellae in egg products; however, the growth of S. pullorum was
+not satisfactory in strontium chloride M broth. 
+[<Entity Title:'An evaluation of selective broths based on the bi-selenite ion
+and on hypertonic strontium chloride in Salmonellae detection in egg products.'
+id=1 sourceid=T1 [(0, 141)]>,
+<Entity Paragraph:'Of the 104 isolations of Salmonella sp. from egg
+pulp, 97 were obtained from strontium chloride M broth, 42 from strontium
+selenite broth and 57 from strontium selenite A broth. The results suggest that
+the first medium may be used more successfully than bi-selenite based media for
+enrichment and subsequent detection of salmonellae in egg products; however, the
+growth of S. pullorum was not satisfactory in strontium chloride M broth.' id=2
+sourceid=T2 [(142, 579)]>, 
+<Entity Habitat:'selective broths' id=3 sourceid=T3 [(17, 33)]>, 
+<Entity Bacteria:'Salmonellae' id=4 sourceid=T4 [(103, 114)]>,
+<Entity Habitat:'egg' id=5 sourceid=T5 [(128, 131)]>, 
+<Entity Habitat:'egg products' id=6 sourceid=T6 [(128, 140)]>, 
+<Entity Bacteria:'Salmonella' id=7 sourceid=T7 [(167, 177)]>, 
+<Entity Habitat:'egg pulp' id=8 sourceid=T8 [(187, 195)]>, 
+<Entity Habitat:'egg' id=9 sourceid=T9 [(187, 190)]>, 
+<Entity Habitat:'strontium chloride M broth' id=10 sourceid=T10 [(219, 245)]>, 
+<Entity Habitat:'strontium selenite broth' id=11 sourceid=T11 [(255, 279)]>, 
+<Entity Habitat:'strontium selenite A broth' id=12 sourceid=T12 [(292, 318)]>, 
+<Entity Habitat:'bi-selenite based media' id=13 sourceid=T13 [(397, 420)]>, 
+<Entity Bacteria:'salmonellae' id=14 sourceid=T14 [(464, 475)]>, 
+<Entity Habitat:'egg products' id=15 sourceid=T15 [(479, 491)]>, 
+<Entity Habitat:'egg' id=16 sourceid=T16 [(479, 482)]>, 
+<Entity Bacteria:'S. pullorum' id=17 sourceid=T17 [(516, 527)]>, 
+<Entity Habitat:'strontium chloride M broth' id=18 sourceid=T18 [(552, 578)]>] 
+[<Relation Lives_In [<Entity Bacteria:'Salmonellae' id=4 sourceid=T4 [(103, 114)]>, <Entity Habitat:'egg' id=5 sourceid=T5 [(128, 131)]>] ['Bacteria', 'Location']>, 
+<Relation Lives_In [<Entity Bacteria:'Salmonellae' id=4 sourceid=T4 [(103, 114)]>, <Entity Habitat:'egg products' id=6 sourceid=T6 [(128, 140)]>] ['Bacteria', 'Location']>, 
+<Relation Lives_In [<Entity Bacteria:'Salmonella' id=7 sourceid=T7 [(167, 177)]>, <Entity Habitat:'strontium selenite A broth' id=12 sourceid=T12 [(292, 318)]>] ['Bacteria', 'Location']>,
+<Relation Lives_In [<Entity Bacteria:'Salmonella' id=7 sourceid=T7 [(167, 177)]>, <Entity Habitat:'egg pulp' id=8 sourceid=T8 [(187, 195)]>] ['Bacteria', 'Location']>, 
+<Relation Lives_In [<Entity Bacteria:'Salmonella' id=7 sourceid=T7 [(167, 177)]>, <Entity Habitat:'strontium selenite broth' id=11 sourceid=T11 [(255, 279)]>] ['Bacteria', 'Location']>, 
+<Relation Lives_In [<Entity Bacteria:'Salmonella' id=7 sourceid=T7 [(167, 177)]>, <Entity Habitat:'strontium chloride M broth' id=10 sourceid=T10 [(219, 245)]>] ['Bacteria', 'Location']>,
+<Relation Lives_In [<Entity Bacteria:'salmonellae' id=14 sourceid=T14 [(464, 475)]>, <Entity Habitat:'egg products' id=15 sourceid=T15 [(479, 491)]>] ['Bacteria', 'Location']>, 
+<Relation Lives_In [<Entity Bacteria:'salmonellae' id=14 sourceid=T14 [(464, 475)]>, <Entity Habitat:'egg' id=16 sourceid=T16 [(479, 482)]>] ['Bacteria', 'Location']>]>
+Running with the following configs:
+	data_dir : dataset/bb3
+	vocab_dir : dataset/vocab
+	emb_dim : 300
+	ner_dim : 30
+	pos_dim : 30
+	hidden_dim : 200
+	num_layers : 2
+	input_dropout : 0.5
+	gcn_dropout : 0.5
+	word_dropout : 0.04
+	topn : 10000000000.0
+	lower : False
+	prune_k : 1
+	conv_l2 : 0
+	pooling : max
+	pooling_l2 : 0.003
+	mlp_layers : 2
+	no_adj : False
+	rnn : True
+	rnn_hidden : 200
+	rnn_layers : 1
+	rnn_dropout : 0.5
+	lr : 0.5
+	lr_decay : 0.9
+	decay_epoch : 5
+	optim : adadelta
+	num_epoch : 50
+	batch_size : 16
+	max_grad_norm : 5.0
+	log_step : 20
+	log : logs.txt
+	save_epoch : 100
+	save_dir : ./saved_models
+	id : 1
+	info : 
+	seed : 0
+	cuda : True
+	cpu : False
+	load : False
+	model_file : None
+	num_class : 2
+	vocab_size : 1320
+	model_save_dir : ./saved_models/01
