@@ -69,12 +69,13 @@ class Parser:
         """
         assert isinstance(corpus, kindred.Corpus)
         
-        # parse each document in the corpus
+        # Document(text, entities, relations, sourceId)
         for d in corpus.documents:
-            # create a dict of entity
+            # create a dict of entities
             entityIDsToEntities = {entity.entityID: entity for entity in d.entities}
-            # create interval tree containing all entities
-            # Format: IntervalTree(Entity(start_pos, end_pos, entityID), Entity(...))
+
+            # create an IntervalTree object containing all entities
+            # IntervalTree(Entity(start_pos, end_pos, entityID), Entity(...))
             denotationTree = IntervalTree()
             entityTypeLookup = {}
             for e in d.entities:
@@ -86,10 +87,13 @@ class Parser:
                         raise Exception
             # print(denotationTree)
 
-            # generate sentence from document text, extract tokens' infos
+            # loop over sentences parsed from the document text (spacy parser), 
+            # extract tokens' infos from each parsed sentence to create Sentence objects
+            # Sentence(text, tokens, dependencies, sourceFilename)
+            # and add the objects into the Document object
             for sentence in self._sentencesGenerator(d.text):
                 # convert spacy token object into our own token object
-                # Format: Token(text, lemma, tags, ner, startPos, endPos) 
+                # Token(text, lemma, tags, ner, startPos, endPos) 
                 tokens = []
                 for t in sentence:
                     ent_type_ = 'O' if t.ent_type_ == '' else t.ent_type_  
@@ -106,21 +110,21 @@ class Parser:
                 
                 # extract dependencies
                 dependencies = []
-                indexOffset = sentence[0].i  # position (word level) of first token of a sentence in the whole document
+                sentOffset = sentence[0].i  # pos (word level) of first token of a sentence in the whole document
                 for t in sentence:
                     depName = t.dep_  # deprel
                     # make the dependency format same as the gcn code
                     if depName == 'ROOT':
-                        dep = (0, t.i-indexOffset, depName)  # t.i - indexOffset: token position - sentence position
+                        dep = (0, t.i-sentOffset, depName)  # t.i - sentOffset: token pos - sentOffset
                     else:
-                        dep = (t.head.i-indexOffset+1, t.i-indexOffset, depName)
+                        dep = (t.head.i-sentOffset+1, t.i-sentOffset, depName)
                     dependencies.append(dep)
                 # print(tokens)
                 # print(entities)
                 # print(dependencies)
 
                 # gather tokens inside each entity based on the denotationTree
-                # Format {"entity_id": [token1, token2], ...}
+                # entityIDsToTokenLocs{"entity_id": [token1_pos, token2_pos], ...}
                 entityIDsToTokenLocs = defaultdict(list)
                 for i, t in enumerate(tokens):
                     entitiesOverlappingWithToken = denotationTree[t.startPos:t.endPos]
@@ -133,8 +137,8 @@ class Parser:
                 sentence = kindred.Sentence(
                     sentenceTxt, tokens, dependencies, d.sourceFilename)                
 
-                # add entities annotations (entities and their tokens position) in a sentence
-                # Annotation Format [(Entity1, [token1, token2]), (Entity2, [token3, token5])]
+                # add entities annotations (entities and their tokens position) in the sentence
+                # Annotations([(Entity1, [token1_pos, token2_pos]), (Entity2, [token3_pos, token5_pos])])
                 for entityID, entityLocs in sorted(entityIDsToTokenLocs.items()):
                     e = entityIDsToEntities[entityID]  # get the entity associated with this ID
                     # check whether entities are in same position as parsed tokens
