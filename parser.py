@@ -14,7 +14,9 @@ class Parser:
     _languageModels = {}
     def __init__(self, language='en'):
         """
-        Create a Parser object that will use Spacy for parsing. It offers all the same languages that Spacy offers. Check out: https://spacy.io/usage/models. Note that the language model needs to be downloaded first (e.g. python -m spacy download en)
+        Create a Parser object that will use Spacy for parsing. 
+        It offers all the same languages that Spacy offers. Check out: https://spacy.io/usage/models. 
+        Note that the language model needs to be downloaded first (e.g. python -m spacy download en)
         :param language: Language to parse (en/de/es/pt/fr/it/nl)
         :type language: str
         """
@@ -29,18 +31,24 @@ class Parser:
                 # language, disable=['ner'])
             Parser._languageModels[language] = spacy.load(language)
         self.nlp = Parser._languageModels[language]
+        
     def _sentencesGenerator(self, text):
+        """Parse the document text.
+        Then generate sentences based on the parsed text
+        """
         if six.PY2 and isinstance(text, str):
             text = unicode(text)
         # TODO: add better sentence segmenter
+        # process and use spacy language model to parse the text
+        # each parsed tokens in the text contains all infos
+        # (word, lemma, dep_head, dep_rel, token_offset, pos, ner)
         text = text.strip().replace("\n", " ").replace("\r", " ")
         text = text.lower()
         parsed = self.nlp(text)
         sentence = None
         # print(parsed)
-        # num = 4
-        # print(parsed[0].text, parsed[0].ent_iob_, parsed[0].ent_type_)
-        # print(parsed[num].text, parsed[num].ent_iob_, parsed[num].ent_type_)
+
+        # concatenate tokens and yield sentences
         for token in parsed:
             if sentence is None or token.is_sent_start:
                 if not sentence is None:
@@ -49,24 +57,24 @@ class Parser:
             sentence.append(token)
         if not sentence is None and len(sentence) > 0:
             yield sentence
+            
     def parse(self, corpus):
         """
-        Parse the corpus. Each document will be split into sentences which are then tokenized and parsed for their dependency graph. All parsed information is stored within the corpus object.
+        Parse the corpus. 
+        Each document will be split into sentences which are then tokenized and 
+        parsed for their dependency graph. 
+        All parsed information is stored within the corpus object.
         :param corpus: Corpus to parse
         :type corpus: kindred.Corpus
         """
         assert isinstance(corpus, kindred.Corpus)
-        # Ignore DeprecationWarning from SortedDict which is inside IntervalTree
-        import warnings
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        # for d in corpus.documents[:2]:
-        PAD_TOKEN = '<PAD>'
-        UNK_TOKEN = '<UNK>'
-        tagdict = {PAD_TOKEN: 0, UNK_TOKEN: 1}
-        depdict = {PAD_TOKEN: 0, UNK_TOKEN: 1}
+        
+        # parse each document in the corpus
         for d in corpus.documents:
-            entityIDsToEntities = {
-                entity.entityID: entity for entity in d.entities}
+            # create a dict of entity
+            entityIDsToEntities = {entity.entityID: entity for entity in d.entities}
+            # create interval tree containing all entities
+            # Format: IntervalTree(Entity(start_pos, end_pos, entityID), Entity(...))
             denotationTree = IntervalTree()
             entityTypeLookup = {}
             for e in d.entities:
@@ -77,36 +85,42 @@ class Parser:
                     else:
                         raise Exception
             # print(denotationTree)
+
+            # generate sentence from document text, extract tokens' infos
             for sentence in self._sentencesGenerator(d.text):
-                # print(sentence)
+                # convert spacy token object into our own token object
+                # Format: Token(text, lemma, tags, ner, startPos, endPos) 
                 tokens = []
                 for t in sentence:
                     ent_type_ = 'O' if t.ent_type_ == '' else t.ent_type_  
-                    token = kindred.Token(t.text, t.lemma_, t.tag_, ent_type_,
-                                  t.idx, t.idx+len(t.text))
+                    token = kindred.Token(
+                        t.text, t.lemma_, t.tag_, ent_type_, t.idx, t.idx+len(t.text))
                     tokens.append(token)
                     if t.tag_ not in tagdict:
                         tagdict[t.tag_] = len(tagdict)
-                
+
+                # extract sentence text by the first and last tokens position
                 sentenceStart = tokens[0].startPos
                 sentenceEnd = tokens[-1].endPos
                 sentenceTxt = d.text[sentenceStart:sentenceEnd]
-                indexOffset = sentence[0].i
+                indexOffset = sentence[0].i  # sentence offset in the document
+                
+                # extract dependencies
                 dependencies = []
-                # print(tokens)
                 for t in sentence:
-                    depName = t.dep_
+                    depName = t.dep_  # deprel
+                    # make the dependency format same as the gcn code
                     if depName == 'ROOT':
                         dep = (0, t.i-indexOffset, depName)
                     else:
                         dep = (t.head.i-indexOffset+1, t.i-indexOffset, depName)
                     dependencies.append(dep)
-                    # add depdict dict
-                    if depName not in depdict:
-                        depdict[depName] = len(depdict)
-                        
                 # print(tokens)
+                # print(entities)
                 # print(dependencies)
+
+                # gather tokens inside each entity
+                # Format {"entity_id": [token1, token2], ...}
                 entityIDsToTokenLocs = defaultdict(list)
                 for i, t in enumerate(tokens):
                     entitiesOverlappingWithToken = denotationTree[t.startPos:t.endPos]
@@ -114,17 +128,24 @@ class Parser:
                         entityID = interval.data
                         entityIDsToTokenLocs[entityID].append(i)
                 # print(entityIDsToTokenLocs)
+
+                # create Sentence object
                 sentence = kindred.Sentence(
-                    sentenceTxt, tokens, dependencies, d.sourceFilename)
-                # Let's gather up the information about the "known" entities in the sentence
+                    sentenceTxt, tokens, dependencies, d.sourceFilename)                
+
+                # gather the entities and their tokens position in a sentence
+                # Annotation Format [(Entity1, [token1, token2]), (Entity2, [token3, token5])]
                 for entityID, entityLocs in sorted(entityIDsToTokenLocs.items()):
-                    # Get the entity associated with this ID
-                    e = entityIDsToEntities[entityID]
-                    sentence.addEntityAnnotation(e, entityLocs)
+                    e = entityIDsToEntities[entityID]  # get the entity associated with this ID
+                    # check whether entities are in same position as parsed tokens
+                    print(e)
+                    for loc in entityLocs:
+                        print(tokens[loc])
+                    sentence.addEntityAnnotation(e, entityLocs)  #
+
+                # add the Sentence object with contained infos into the Document object
                 d.addSentence(sentence)
                 # print(sentence.entityAnnotations)
                 # print(d.sentences)
-        # print(tagdict)
-        # print(depdict)
         
         corpus.parsed = True
