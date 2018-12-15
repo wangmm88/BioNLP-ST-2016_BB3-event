@@ -99,19 +99,19 @@ class Parser:
                     if t.tag_ not in tagdict:
                         tagdict[t.tag_] = len(tagdict)
 
-                # extract sentence text by the first and last tokens position
+                # extract sentence text by the first and last tokens positions (charater level)
                 sentenceStart = tokens[0].startPos
                 sentenceEnd = tokens[-1].endPos
                 sentenceTxt = d.text[sentenceStart:sentenceEnd]
-                indexOffset = sentence[0].i  # sentence offset in the document
                 
                 # extract dependencies
                 dependencies = []
+                indexOffset = sentence[0].i  # position (word level) of first token of a sentence in the whole document
                 for t in sentence:
                     depName = t.dep_  # deprel
                     # make the dependency format same as the gcn code
                     if depName == 'ROOT':
-                        dep = (0, t.i-indexOffset, depName)
+                        dep = (0, t.i-indexOffset, depName)  # t.i - indexOffset: token position - sentence position
                     else:
                         dep = (t.head.i-indexOffset+1, t.i-indexOffset, depName)
                     dependencies.append(dep)
@@ -119,7 +119,7 @@ class Parser:
                 # print(entities)
                 # print(dependencies)
 
-                # gather tokens inside each entity
+                # gather tokens inside each entity based on the denotationTree
                 # Format {"entity_id": [token1, token2], ...}
                 entityIDsToTokenLocs = defaultdict(list)
                 for i, t in enumerate(tokens):
@@ -129,11 +129,11 @@ class Parser:
                         entityIDsToTokenLocs[entityID].append(i)
                 # print(entityIDsToTokenLocs)
 
-                # create Sentence object
+                # create Sentence object 
                 sentence = kindred.Sentence(
                     sentenceTxt, tokens, dependencies, d.sourceFilename)                
 
-                # gather the entities and their tokens position in a sentence
+                # add entities annotations (entities and their tokens position) in a sentence
                 # Annotation Format [(Entity1, [token1, token2]), (Entity2, [token3, token5])]
                 for entityID, entityLocs in sorted(entityIDsToTokenLocs.items()):
                     e = entityIDsToEntities[entityID]  # get the entity associated with this ID
