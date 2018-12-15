@@ -100,8 +100,6 @@ class Parser:
                     token = kindred.Token(
                         t.text, t.lemma_, t.tag_, ent_type_, t.idx, t.idx+len(t.text))
                     tokens.append(token)
-                    if t.tag_ not in tagdict:
-                        tagdict[t.tag_] = len(tagdict)
 
                 # extract sentence text by the first and last tokens positions (charater level)
                 sentenceStart = tokens[0].startPos
