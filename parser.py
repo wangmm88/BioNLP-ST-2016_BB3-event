@@ -44,7 +44,7 @@ class Parser:
         # (word, lemma, dep_head, dep_rel, token_offset, pos, ner)
         text = text.strip().replace("\n", " ").replace("\r", " ")
         text = text.lower()
-        parsed = self.nlp(text)
+        parsed = self.nlp(text)  # spacy parse()
         sentence = None
         # print(parsed)
 
